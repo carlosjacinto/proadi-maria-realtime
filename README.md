@@ -88,3 +88,33 @@ O padrão adotado para o arquivo JSON de metadados é:
   "slice_thickness": "Espessura das fatias"
 }
 ```
+
+Como visto no template anterior o modelo terá acesso a informações básicas do exame e das séries permitindo identificar quais modalidades e/ou procedimentos a serem analisados. É de responsabilidade do modelo manipular esses dados corretamente e identificar quais imagens devem ser processadas ou não.
+
+## Imagens
+
+As séries presentes no exame serão disponibilizadas aos modelos por meio de uma hierarquia de arquivos locais, ou seja, toda a responsabilidade de organização dos arquivos do exame pertence ao módulo de execução e não ao modelo enviado pelo pesquisador.
+
+Todas as imagens presentes no diretório estarão com formato do tipo DICOM.
+Os arquivos serão organizados dentro do diretório identificado pelo argumento `--exam_path` em pastas com o id de cada série como apresentado na figura abaixo:
+
+```sh
+Colocar o outro aqui, Carlinhos!
+```
+
+Cabe ao modelo identificar quais séries ele deseja consumir e acessar o diretório seguindo o padrão **“EXAM_PATH/SERIES_ID”**.
+
+$ 4. Padrão de saída
+
+As saídas dos modelos devem ser salvas como arquivos JSON no diretório do argumento `--model_output` seguindo a estrutura apresentada abaixo:
+
+```javascript
+{
+  "scope": “Escopo da resposta da predição: study, series ou instance (Obrigatório)",
+  "study_id": “Identificador do estudo (Obrigatório)",
+  "series_id": “Identificador da série (Com base na regra abaixo)",
+  "instance_id": "Identificador da imagem (Com base na regra abaixo)",
+  "model_output": "Lista de resultados do modelo (Obrigatório)",
+  "files": "Lista de arquivos (caminhoRelativo/imagem.extensão) que o usuário deseja enviar para o usuário final (Opcional)"
+}
+```
