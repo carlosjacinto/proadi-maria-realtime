@@ -39,5 +39,12 @@ Esse script deve ser capaz de receber três argumentos de entrada:
 A saída esperada do modelo deve ser um arquivo JSON com informações obrigatórias e não obrigatórias definidas para o pesquisador no padrão de saída do bundle. A quantidade de arquivos de JSON com predição e os nomes dos arquivos são de livre escolha do pesquisador. Todos os arquivos com extensão JSON dentro da pasta informada na parâmetro “model_output” será analisado como uma possível predição do exame.
 
 ```sh
-carlinhos, colocar aqui!
+├── exemplos
+│   ├── Dockerfile.dev
+│   ├── inputs
+│   ├── model
+│   ├── outputs
+│   ├── teste.py
+│   └── worker_requirements.txt
+└── README.md
 ```
