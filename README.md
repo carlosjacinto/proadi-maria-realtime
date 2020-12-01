@@ -26,7 +26,7 @@ Não existe qualquer restrição de quantidade ou tipos de arquivos presentes no
 
 Um script escrito em Python que deve receber uma entrada como argumento e retornar a predição final.
 
-Esse script deve ser capaz de receber três argumentos de entrada:
+#### Esse script deve ser capaz de receber três argumentos de entrada:
 
 |Parâmetro|Descrição|
 |--|--|
@@ -34,20 +34,46 @@ Esse script deve ser capaz de receber três argumentos de entrada:
 |--exam_data|Contém uma string com o caminho até o arquivo JSON com metadados e outras informações relevantes do exame (mais detalhes na seção Padrão de Entrada).|
 |--model_output|Contém uma string com o caminho em que as saídas do modelo devem ser salvas (mais detalhes na seção Padrão de Entrada).|
 
-### Resultados do modelo:
+#### Esse script deve ser capaz de produzir como resposta:
 
 A saída esperada do modelo deve ser um arquivo JSON com informações obrigatórias e não obrigatórias definidas para o pesquisador no padrão de saída do bundle. A quantidade de arquivos de JSON com predição e os nomes dos arquivos são de livre escolha do pesquisador. Todos os arquivos com extensão JSON dentro da pasta informada na parâmetro “model_output” será analisado como uma possível predição do exame.
 
 ```sh
-├── exemplos
-│   ├── Dockerfile.dev
-│   ├── inputs
-│   ├── model
-│   ├── outputs
-│   ├── teste.py
-│   └── worker_requirements.txt
-└── README.md
+model/
+├── APModel
+│   ├── cfg_ap.json
+│   └── weight_ap.ckpt
+├── ARModel
+│   ├── cfg_ar.json
+│   └── weight_ar.ckpt
+├── predict.py
+├── requirements.txt
+├── src
+│   ├── data_utils
+│   │   ├── dataset.py
+│   │   ├── imgaug.py
+│   │   ├── IngestModule.py
+│   │   ├── misc.py
+│   │   ├── ModelOutput.py
+│   │   ├── OutputModule.py
+│   │   └── utils.py
+│   └── model_utils
+│       ├── APEngine.py
+│       ├── AREngine.py
+│       ├── attention_map.py
+│       ├── backbone
+│       │   └── densenet.py
+│       ├── classifier.py
+│       ├── global_pool.py
+│       ├── PostProcessingModule.py
+│       ├── TPEngine.py
+│       └── utils.py
+└── TPModel
+    ├── cfg_tp.json
+    └── weight_tp.ckpt
+
 ```
+> Exemplo de estrutura de um bundle válido para o sistema Real Time.
 
 # 3. Padrão de entrada
 
@@ -99,8 +125,30 @@ Todas as imagens presentes no diretório estarão com formato do tipo DICOM.
 Os arquivos serão organizados dentro do diretório identificado pelo argumento `--exam_path` em pastas com o id de cada série como apresentado na figura abaixo:
 
 ```sh
-Colocar o outro aqui, Carlinhos!
+inputs/
+├── 1.3.46.670589.30.1.6.1.963334367394.1596547172859.1
+│   ├── 1.3.46.670589.30.1.6.1.963334367394.1596547172937.1.dcm
+│   ├── 1.3.46.670589.30.1.6.1.963334367394.1596547172937.2.dcm
+│   ├── 1.3.46.670589.30.1.6.1.963334367394.1596547172937.3.dcm
+│   └── 1.3.46.670589.30.1.6.1.963334367394.1596547172937.4.dcm
+├── 1.3.46.670589.30.1.6.1.963334367394.1596547172859.2
+│   ├── 1.3.46.670589.30.1.6.1.963334367394.1596547172937.1.dcm
+│   ├── 1.3.46.670589.30.1.6.1.963334367394.1596547172937.2.dcm
+│   ├── 1.3.46.670589.30.1.6.1.963334367394.1596547172937.3.dcm
+│   └── 1.3.46.670589.30.1.6.1.963334367394.1596547172937.4.dcm
+├── 1.3.46.670589.30.1.6.1.963334367394.1596547179625.1
+│   ├── 1.3.46.670589.30.1.6.1.963334367394.1596547179734.1.dcm
+│   ├── 1.3.46.670589.30.1.6.1.963334367394.1596547179734.2.dcm
+│   ├── 1.3.46.670589.30.1.6.1.963334367394.1596547179734.3.dcm
+│   └── 1.3.46.670589.30.1.6.1.963334367394.1596547179734.4.dcm
+├── 1.3.46.670589.30.1.6.1.963334367394.1596547179625.3
+│   ├── 1.3.46.670589.30.1.6.1.963334367394.1596547179734.1.dcm
+│   ├── 1.3.46.670589.30.1.6.1.963334367394.1596547179734.2.dcm
+│   ├── 1.3.46.670589.30.1.6.1.963334367394.1596547179734.3.dcm
+│   └── 1.3.46.670589.30.1.6.1.963334367394.1596547179734.4.dcm
+└── exam_data.json
 ```
+> Estrutura de um exame.
 
 Cabe ao modelo identificar quais séries ele deseja consumir e acessar o diretório seguindo o padrão **“EXAM_PATH/SERIES_ID”**.
 
@@ -118,3 +166,85 @@ As saídas dos modelos devem ser salvas como arquivos JSON no diretório do argu
   "files": "Lista de arquivos (caminhoRelativo/imagem.extensão) que o usuário deseja enviar para o usuário final (Opcional)"
 }
 ```
+
+Algumas observações acerca dos campos:
+
+- “scope”: Valor deve ser study, series ou instance.
+- “series_id”: Obrigatório informar caso o campo scope seja serie ou - instance.
+- “instance_id”: Obrigatório informar caso o campo scope seja instance.
+- “files”: Não existe regra para a quantidade ou extensão dos arquivos.
+- “model_output”: Lista de objetos contendo os campos abaixo:
+  - “type”: Valor deve ser "binary", "heatmap", "freeform", “point”, “line”, “polygon” ou "bbox"; 
+  - “label_id”: Tag do resultado (de acordo com o cadastro de Labels);
+  - “data”: Objeto contendo o resultado, deve conter os campos seguindo o padrão abaixo:
+
+O campo “model_output” pode possuir N objetos de cada tipo (Detalhados abaixo).
+
+Deve-se preencher esses campos de forma diferente dependendendo do escopo que o resultado do modelo contempla. Os escopos disponíveis são:
+
+## Resultado para todo o exame
+
+Caso o resultado do modelo contemple todo o exame, o JSON de saída deve ser gerado preenchendo todos os campos apresentados anteriormente com os identificadores corretamente preenchidos (ids), porém deixando o campo “series_id” e “instance_id” como nulos.
+Exemplo:
+```javascript
+{
+    "scope": "study",
+    "study_id": "00000.00000.00001",
+    "files": [
+        "a.pdf",
+        "b.pdf",
+        "c.pdf"
+    ],
+    "model_output": [{...},{...},{...},...]
+}
+```
+
+## Resultado para toda uma série
+
+Caso o resultado do modelo contemple apenas uma das séries do exame, o JSON de saída deve ser gerado preenchendo todos os campos apresentados anteriormente com os identificadores corretamente preenchidos (ids) porém deixando apenas o campo “instance_id” como nulo.
+
+Exemplo:
+```javascript
+{
+    "scope": "series",
+    "study_id": "00000.00000.00001",
+    "series_id": "00000.00001.00001",
+    "files": [
+        "a.pdf",
+        "b.pdf",
+        "c.pdf"
+    ],
+    "model_output": [{...},{...},{...},...]
+}
+```
+
+## Resultado para uma única imagem (instância)
+
+Caso o resultado do modelo contemple apenas uma das imagens a saída deve ser gerado preenchendo todos os campos apresentados anteriormente com os identificadores corretamente preenchidos (ids).
+
+Exemplo:
+```javascript
+{
+    "scope": "instance",
+    "study_id": "00000.00000.00001",
+    "series_id": "00000.00001.00001",
+    "instance_id": "00001.00001.00001",
+    "files": [
+        "a.pdf",
+        "b.pdf",
+        "c.pdf"
+    ],
+    "model_output": [{...},{...},{...},...]
+}
+```
+
+O conteúdo do campo **“model_output”** deverá seguir o padrão do tipo de saída desejada. Existem 4 tipos de saídas possíveis sendo que cada uma contempla objetos de interesse diferentes dentro do exame. Mais detalhes de cada tipo podem ser vistas a seguir:
+
+Tipo de saída “binary”:
+	O tipo **“binary”** consiste em uma saída que indica valores absolutos com o uso da lógica booleana, ou seja, se existe ou não lesão, por exemplo. Essa indicação deve ser apresentada obrigatoriamente com os campos **“prediction_score”**, **binary_score”** e **“threshold”** dentro de um campo chamado **“data”**. 
+
+
+
+
+
+
