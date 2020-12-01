@@ -1,0 +1,10 @@
+FROM python:3.6
+ENV PYTHONUNBUFFERED 1
+COPY . /app
+WORKDIR /app
+RUN apt-get update -y && \
+    apt-get install -y python-dev build-essential && \
+    pip install --no-cache-dir -r ./worker_requirements.txt && \
+    pip install --no-cache-dir -r ./model/requirements.txt && \
+    apt-get update && apt-get install 'ffmpeg' 'libsm6' 'libxext6'  -y 
+CMD ["python", "teste.py"]
