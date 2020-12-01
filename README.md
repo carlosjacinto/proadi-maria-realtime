@@ -104,7 +104,7 @@ Colocar o outro aqui, Carlinhos!
 
 Cabe ao modelo identificar quais séries ele deseja consumir e acessar o diretório seguindo o padrão **“EXAM_PATH/SERIES_ID”**.
 
-$ 4. Padrão de saída
+# 4. Padrão de saída
 
 As saídas dos modelos devem ser salvas como arquivos JSON no diretório do argumento `--model_output` seguindo a estrutura apresentada abaixo:
 
