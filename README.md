@@ -238,13 +238,126 @@ Exemplo:
 }
 ```
 
+## Campo Model Output
 O conteúdo do campo **“model_output”** deverá seguir o padrão do tipo de saída desejada. Existem 4 tipos de saídas possíveis sendo que cada uma contempla objetos de interesse diferentes dentro do exame. Mais detalhes de cada tipo podem ser vistas a seguir:
 
-Tipo de saída “binary”:
-	O tipo **“binary”** consiste em uma saída que indica valores absolutos com o uso da lógica booleana, ou seja, se existe ou não lesão, por exemplo. Essa indicação deve ser apresentada obrigatoriamente com os campos **“prediction_score”**, **binary_score”** e **“threshold”** dentro de um campo chamado **“data”**. 
+### Tipo de saída “binary”:
 
+O tipo **“binary”** consiste em uma saída que indica valores absolutos com o uso da lógica booleana, ou seja, se existe ou não lesão, por exemplo. Essa indicação deve ser apresentada obrigatoriamente com os campos **“prediction_score”**, **binary_score”** e **“threshold”** dentro de um campo chamado **“data”**. 
 
+```javascript
+"prediction_score": float,
+"binary_score": true or false,
+"threshold": float
+```
 
+Exemplo:
+```javascript
+"model_output": [
+  {
+    "type": "binary",
+    "label_id": "L_12382233",
+    "data": {
+      "prediction_score": 0.7348576,
+      "binary_score": true,
+      "threshold": 0.5,
+      "notes": "abcdefgi"
+    }
+  }
+]
+```
 
+### Tipo de saída “point”:
+O tipo Point, representado pelo campo **“point”**, consiste em uma saída que indica um ponto de **"interesse"**. Este ponto deve ser representado como um par de coordenadas X e Y, sendo que esses valores indicam a distância em relação ao pixel de origem da imagem (0,0). Dentro de um campo chamado **“data”**. 
 
+```javascript
+"x": float,
+"y": float
+```
+Exemplo:
+```javascript
+"model_output": [
+  {
+    "type": "point",
+    "label_id": "L_12382173",
+    "data": {
+      "x": 45.77,
+      "y": 300.89,
+      "notes": "abcdef"
+    }
+  }
+]
+```
 
+### Tipo de saída “line”:
+O tipo Line, representado pelo campo **“line”**, consiste em uma saída que indica uma **"região de interesse definida por uma linha"**. Essa linha deve ser representada pelas coordenadas X e Y de início e término da linha, sendo que esses valores indicam a distância em relação ao pixel de origem da imagem (0,0). Dentro de um campo chamado **“data”**.
+
+```javascript
+"x1": float,
+"y1": float,
+"x2": float,
+"y2": float
+```
+Exemplo:
+```javascript
+"model_output": [
+  {
+    "type": "line",
+    "label_id": "L_12382173",
+    "data": {
+      "x1": 45.77,
+      "y1": 300.89,
+      "x2": 50.22,
+      "y2": 310.23,
+      "notes": "abcdef"
+    }
+  }
+]
+```
+
+### Tipo de saída “bbox”:
+O tipo Bounding Box, representado pelo campo **“bbox”**, consiste em uma saída que indica uma **"região de interesse definida por um retângulo"**. Essa região deve ser representada como um par de coordenadas X e Y, sendo que esses valores indicam a distância em relação ao pixel de origem da imagem (0,0) e pelos valores height e width. Dentro de um campo chamado **“data”**.
+
+```javascript
+"x": float,
+"y": float,
+"height": float,
+"width": float
+```
+
+Exemplo:
+```javascript
+"model_output": [
+  {
+    "type": "bbox",
+    "label_id": "L_12382173",
+    "data": {
+      "x": 45.77,
+      "y": 300.89,
+      "height": 200,
+      "width": 50,
+      "notes": "abcdef"
+    }
+  }
+]
+```
+
+### Tipo de saída “polygon”:
+O tipo Poligon, representado pelo campo **“polygon”**, consiste em uma saída que indica uma **"região de interesse definida por um polígono"**. Essa região deve ser representada por uma lista contendo as coordenadas dos vértices do polígono [X, Y], sendo que esses valores indicam a distância em relação ao pixel de origem da imagem (0,0). Dentro de um campo chamado **“data”**.
+
+```javascript
+"data": Objeto contendo uma lista de coordenadas X,Y
+```
+
+Exemplo:
+```javascript
+"model_output": [
+  {
+    "type": "bbox",
+    "label_id": "L_12382173",
+    "notes": "abcdef",
+    "data": {[[x1,y1], [x2,y2], ...]}    
+    }
+  }
+]
+```
