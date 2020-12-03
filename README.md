@@ -355,9 +355,334 @@ Exemplo:
   {
     "type": "bbox",
     "label_id": "L_12382173",
-    "notes": "abcdef",
-    "data": {[[x1,y1], [x2,y2], ...]}    
+    "data": {
+      "notes": "abcdef",   
+      [[x1,y1], [x2,y2], ...]
     }
   }
 ]
+```
+
+### Tipo de saída “heatmap”:
+
+O tipo **“heatmap”** consiste em uma saída que indica um mapa de calor caracterizando a representação de dados na forma de mapa ou diagrama, onde os dados são representados por cores. Essa região deve ser representada como uma array de valores do tipo double no campo **“data”**.
+
+```javascript
+"heatmap": Lista de valores do tipo double,
+```
+
+Exemplo:
+```javascript
+"model_output": [
+  {
+    "type": "heatmap",
+    "label_id": "L_12382233",
+    "data": {
+      "heatmap": [
+        0.4324234,
+        0.234234,
+        0.4234234
+      ],
+      "notes": "abcdef"
+    }
+  }
+]
+```
+
+### Tipo de saída “freeform”:
+
+O tipo **“freeform”** consiste em uma saída que indica um **“campo livre"**. Esse campo livre permite que o modelo dê como saída quaisquer campos que julgar pertinente como, por exemplo, dando uma classificação para aquele exame (lesão maligna ou benigna) ou adicionando outros comentários (“identificada possível hemorragia na região central”). Caso a saída do seu modelo não se adeque a nenhuma das outras citadas anteriormente, o tipo “freeform” deve ser empregado.
+
+```javascript
+Campos Livres
+```
+
+Exemplo:
+```javascript
+"model_output": [
+  {
+    "type": "freeform",
+    "label_id": "L_12382233",
+    "data": {
+      "notes": "abcdef",
+      "free_form": {
+        "text1": "Valor",
+        "text2": "Valor",
+        "text3": "Valor"
+      }
+    }
+  }
+]
+```
+
+## Exemplo de uma predição válida
+
+Toda predição passará pela validação presente no Anexo 1 deste documento.
+
+```javascript
+{
+   "scope": "instance",
+   "study_id": "Exemplo study",
+   "series_id": "Exemplo serie",
+   "instance_id": "Exemplo instance",
+   "files": [
+     "a.pdf",
+     "b.pdf",
+     "c.pdf"
+   ],
+   "model_output": [
+     {
+       "type": "binary",
+       "label_id": "L_12382233",
+       "data": {
+         "prediction_score": 0.7348576,
+         "binary_score": true,
+         "threshold": 0.5,
+         "notes": "abcdefgi"
+       }
+     },
+     {
+       "type": "heatmap",
+       "label_id": "L_12382233",
+       "data": {
+         "heatmap": [
+           0.4324234,
+           0.234234,
+           0.4234234
+         ],
+         "notes": "abcdef"
+       }
+     },
+     {
+       "type": "freeform",
+       "label_id": "L_12382233",
+       "data": {
+         "free_form": {
+           "text1": "Valor",
+           "text2": "Valor",
+           "text3": "Valor"
+         },
+         "notes": "abcdef"
+       }
+     },
+     {
+       "type": "bbox",
+       "label_id": "L_12382173",
+       "data": {
+         "x": 45.77,
+         "y": 300.89,
+         "height": 200,
+         "width": 50,
+         "notes": "abcdef"
+       }
+     }
+   ]
+ }
+```
+> Estrutura de um output.
+
+# 5. Requisitos para exame ser analisado
+
+Para que um exame seja analisado pelo GASPR é necessário que ele contenha um conjunto mínimo de informações que permita identificar qual o modelo correto para fazer sua análise (se houver). Todas as informações são obtidas a partir do padrão DICOM e seguem as TAGs listadas abaixos:
+
+## Atributos obrigatórios
+
+- (0008, 0060): Modalidade do exame.
+- (,): Parte do corpo em que o exame foi realizada. (A SER DEFINIDO)
+
+## Atributos opcionais
+
+- (0008, 1030): Descrição do estudo
+- (0010, 0030): Data de nascimento do paciente
+- (0010, 0040): Sexo do paciente
+- (0010, 1010): Idade do paciente
+- (0010, 1020): Altura do paciente
+- (0010, 1030): Peso do paciente 
+- (0028, 0010): Quantidade de linhas das imagens
+- (0028, 0011): Quantidade de colunas das imagens
+- (0028, 0100): Número de bits por pixel
+- (0028, 2110): Se as imagens foram submetidas a uma compressão com perdas
+- (0028, 0030): Espaçamento dos pixels
+- (0018, 0050): Espessura das fatias
+- (0008, 0022): Data de aquisição do exame
+
+# 6. Como testar seu modelo
+Para testar o algoritmo se o ambiente está funcional:
+	
+1. Instale e configure o Docker em sua máquina. Sugestão é seguir o documentação oficial https://docs.docker.com/get-docker/
+2. Baixe o bundle disponível em https://deploy-realtime-exemplos.s3-sa-east-1.amazonaws.com/Bundle_RealTime.zip
+3. Colocar seu algoritmo dentro da pasta Model
+4. Colocar seu exame de teste na pasta inputs
+5. Executar o comando em seu terminal: 
+```sh
+docker build -t teste:latest -f Dockerfile.dev . && docker run teste
+```
+8. Aguardar a conclusão que será impressa no terminal.
+
+# 7. Anexos
+
+## Anexo 1
+Para cada predição oriunda dos algoritmos é executada uma validação de estrutura. O esquema abaixo demonstra a estrutura padrão de saída (output) do modelo no código JSON:
+
+```javascript
+{
+  $jsonSchema: {
+    bsonType: 'object',
+    additionalProperties: false,
+    required: [
+      'scope',
+      'study_id',
+      'model_id',
+      'end_date',
+      'start_date',
+      'exec_duration',
+      'model_output'
+    ],
+    properties: {
+      scope: {
+        bsonType: 'string',
+        'enum': [
+          'study',
+          'instance',
+          'serie',
+          'series'
+        ],
+        description: 'must be a string and is required'
+      },
+      files: {
+        bsonType: 'array',
+        description: 'must be a string and is required'
+      },
+      study_id: {
+        bsonType: 'string',
+        description: 'must be a string and is required'
+      },
+      model_id: {
+        bsonType: 'objectId',
+        description: 'must be a string and is required'
+      },
+      _id: {
+        bsonType: 'objectId',
+        description: 'must be a string and is required'
+      },
+      exec_duration: {
+        bsonType: 'string',
+        description: 'must be a string and is required'
+      },
+      series_id: {
+        bsonType: 'string',
+        description: 'must be a string and is required'
+      },
+      instance_id: {
+        bsonType: 'string',
+        description: 'must be a string and is required'
+      },
+      end_date: {
+        bsonType: 'date',
+        description: 'must be a date and is required'
+      },
+      start_date: {
+        bsonType: 'date',
+        description: 'must be a string and is required'
+      },
+      url_files: {
+        bsonType: 'string',
+        description: 'must be a string and is required'
+      },
+      model_output: {
+        bsonType: [
+          'array'
+        ],
+        minItems: 1,
+        additionalProperties: false,
+        items: {
+          bsonType: [
+            'object'
+          ],
+          required: [
+            'label_id',
+            'type',
+            'data'
+          ],
+          additionalProperties: false,
+          description: '\'items\' must contain the stated fields.',
+          properties: {
+            label_id: {
+              description: 'must be a string and is required'
+            },
+            type: {
+              bsonType: 'string',
+              'enum': [
+                'binary',
+                'freeform',
+                'heatmap',
+                'bbox',
+                'polygon',
+                'line',
+                'point'
+              ],
+              description: 'must be a string and is required'
+            },
+            data: {
+              bsonType: [
+                'object'
+              ],
+              minItems: 1,
+              additionalProperties: true,
+              items: {
+                bsonType: [
+                  'object'
+                ],
+                additionalProperties: false,
+                description: '\'items\' must contain the stated fields.',
+                properties: {
+                  prediction_score: {
+                    bsonType: 'double',
+                    description: 'must be a string and is required'
+                  },
+                  x: {
+                    bsonType: 'double',
+                    description: 'must be a string and is required'
+                  },
+                  notes: {
+                    bsonType: 'string',
+                    description: 'must be a string and is required'
+                  },
+                  y: {
+                    bsonType: 'double',
+                    description: 'must be a string and is required'
+                  },
+                  height: {
+                    bsonType: 'int',
+                    description: 'must be a string and is required'
+                  },
+                  width: {
+                    bsonType: 'int',
+                    description: 'must be a string and is required'
+                  },
+                  threshold: {
+                    bsonType: 'double',
+                    description: 'must be a string and is required'
+                  },
+                  binary_score: {
+                    bsonType: 'bool',
+                    description: 'must be a string and is required'
+                  },
+                  free_form: {
+                    bsonType: 'object',
+                    description: 'must be a string and is required'
+                  },
+                  heatmap: {
+                    bsonType: 'array',
+                    description: 'must be a string and is required'
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
 ```
