@@ -1,0 +1,13 @@
+pika==1.1.0
+pymongo
+boto3==1.14.31
+pytz
+datetime
+envyaml==0.2060
+configparser==5.0.0
+ddtrace==0.41.0
+PyYAML==5.3.1
+requests
+pydicom
+httplib2
+urllib3
